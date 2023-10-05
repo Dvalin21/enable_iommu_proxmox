@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# Function to detect CPU manufacturer
+get_cpu_manufacturer() {
+    if lscpu | grep -q "GenuineIntel"; then
+        echo "intel"
+    elif lscpu | grep -q "AuthenticAMD"; then
+        echo "amd"
+    else
+        echo "unknown"
+    fi
+}
+
+# Function to configure GRUB based on CPU type
+configure_grub() {
+    local cpu_type="$1"
+    local grub_file="/etc/default/grub"
+    local grub_entry=""
+
+    if [ "$cpu_type" == "intel" ]; then
+        grub_entry="GRUB_CMDLINE_LINUX_DEFAULT=\"quiet intel_iommu=on iommu=pt\""
+    elif [ "$cpu_type" == "amd" ]; then
+        grub_entry="GRUB_CMDLINE_LINUX_DEFAULT=\"quiet amd_iommu=on iommu=pt\""
+    fi
+
+    if [ -n "$grub_entry" ]; then
+        sed -i "10s/.*/$grub_entry/" "$grub_file"
+    fi
+
+    update-grub
+}
+
+# Function to configure /etc/modules
+configure_modules() {
+    local modules_file="/etc/modules"
+    local vfio_entries=("vfio" "vfio_iommu_type1" "vfio_pci" "vfio_virqfd")
+
+    if [ -f "$modules_file" ]; then
+        # Remove any existing VFIO entries to prevent duplicates
+        sed -i '/vfio\|vfio_iommu_type1\|vfio_pci\|vfio_virqfd/d' "$modules_file"
+
+        # Append each VFIO entry on a separate line
+        for entry in "${vfio_entries[@]}"; do
+            echo "$entry" >> "$modules_file"
+        done
+    fi
+}
+
+# Main script
+cpu_type=$(get_cpu_manufacturer)
+
+if [ "$cpu_type" == "intel" ]; then
+    configure_grub "intel"
+    configure_modules
+    echo "Configuration completed for Intel CPU."
+elif [ "$cpu_type" == "amd" ]; then
+    configure_grub "amd"
+    configure_modules
+    echo "Configuration completed for AMD CPU."
+else
+    echo "Unsupported CPU type or detection error."
+    exit 1
+fi
+
+read -p "Configuration completed. Reboot now? (y/n): " choice
+if [ "$choice" == "y" ] || [ "$choice" == "Y" ]; then
+    echo "Rebooting..."
+    reboot
+else
+    echo "Please reboot your system later to apply the changes."
+fi
