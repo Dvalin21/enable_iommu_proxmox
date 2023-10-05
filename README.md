@@ -4,4 +4,4 @@ Pull script to directory of choice. Make sure to change permissions on the scrip
 chmod +x
 Then just run the script 
 ./iommu
-Once completed it will prompt you if you want to reboot. And yes you need to reboot. 
+Once completed it will prompt you to reboot. And yes you need to reboot. 
