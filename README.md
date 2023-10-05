@@ -1,5 +1,5 @@
 # enable_iommu_proxmox
-Created script to detect cpu and apply the appropriate entries to grub and modules
+Created script to detect cpu and apply the appropriate entries to grub and modules.
 Pull script to directory of choice. Make sure to change permissions on the script
 chmod +x
 Then just run the script 
