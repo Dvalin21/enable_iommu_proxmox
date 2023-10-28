@@ -24,7 +24,8 @@ configure_grub() {
     fi
 
     if [ -n "$grub_entry" ]; then
-        sed -i "10s/.*/$grub_entry/" "$grub_file"
+        # Use sed to find and replace the desired line
+        sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"quiet.*/$grub_entry/" "$grub_file"
     fi
 
     update-grub
